@@ -6,9 +6,15 @@ Permette di caricare un dominio e un problema su cui simulare una sequenza di az
 
 from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import SequentialSimulator
+import argparse
+
+parser = argparse.ArgumentParser(description="PDDL problem simulator")
+parser.add_argument('domain', type=str, help='Path to the PDDL domain')
+parser.add_argument('problem', type=str, help='Path to the PDDL problem')
+args = parser.parse_args()
 
 reader = PDDLReader()
-problem = reader.parse_problem('./gripper.pddl', './gripper-ball.pddl')
+problem = reader.parse_problem(args.domain, args.problem)
 
 # Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
 fluents = {}
@@ -30,6 +36,7 @@ with SequentialSimulator(problem) as simulator:
     states = [simulator.get_initial_state()]
     run = True
     while run:
+        print("\nState number: {n}".format(n=len(states)))
         # Prendi lo stato corrente dalla cima della stack
         state = states[len(states)-1]
         '''
@@ -66,8 +73,11 @@ with SequentialSimulator(problem) as simulator:
                 # Printa lo stato corrente
                 print(str(state))
             elif choice==-4:
-                states.pop()
-                taking_input = False
+                if (len(states)<2):
+                    print("Already at beginning state")
+                else:
+                    states.pop()
+                    taking_input = False
             elif choice==-5:
                 # Esce dalla simulazione
                 taking_input = False
