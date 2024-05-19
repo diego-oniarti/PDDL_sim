@@ -5,7 +5,10 @@ Permette di caricare un dominio e un problema su cui simulare una sequenza di az
 '''
 
 from unified_planning.io import PDDLReader
-from unified_planning.shortcuts import SequentialSimulator
+from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action
+from unified_planning.model import Problem
+from unified_planning.engines import SequentialSimulatorMixin
+from typing import Dict, List, Tuple, cast
 import argparse
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
@@ -13,15 +16,14 @@ parser.add_argument('domain', type=str, help='Path to the PDDL domain')
 parser.add_argument('problem', type=str, help='Path to the PDDL problem')
 args = parser.parse_args()
 
-reader = PDDLReader()
-problem = reader.parse_problem(args.domain, args.problem)
+problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
 
 # Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
-fluents = {}
+fluents: Dict[str, Fluent] = {}
 for fluent in problem.fluents:
     fluents[fluent.name] = fluent
 
-objects = {}
+objects: Dict[str, Object] = {}
 for obj in problem.all_objects:
     objects[obj.name] = obj
 
@@ -32,13 +34,16 @@ def state_equality(state_a, state_b):
     return False
 
 with SequentialSimulator(problem) as simulator:
+    simulator: SequentialSimulatorMixin
+
     # Stack di tutti gli stati visti
-    states = [simulator.get_initial_state()]
-    run = True
+    states: List[State] = [simulator.get_initial_state()]
+    run: bool = True
     while run:
         print("\nState number: {n}".format(n=len(states)))
         # Prendi lo stato corrente dalla cima della stack
-        state = states[len(states)-1]
+        state: State = states[len(states)-1]
+
         '''
         # Controlla se (free hand) è true nello stato corrente
         free_fluent = fluents.get("free")
@@ -50,7 +55,7 @@ with SequentialSimulator(problem) as simulator:
         # Le actions sono ritornate da get_applicable_actions come tupla dove il primo elemento è un'azione e il secondo è una tupla con i parametri effettivi
         print("Applicable Actions")
         applicable_actions = simulator.get_applicable_actions(state)
-        actions = []
+        actions: List[Tuple[Action, Tuple[Object, ...]]] = []
         for applicable_action in applicable_actions:
             # Stampa solo il nome dell'azione e i parametri per rendere la scelta più leggibile
             print("{n}: {action_name} {actual_params}".format(n=len(actions), action_name=applicable_action[0].name,actual_params=applicable_action[1]))
@@ -85,7 +90,7 @@ with SequentialSimulator(problem) as simulator:
             else:
                 # Simula l'azione scelta
                 chosen_action = actions[choice]
-                new_state = simulator.apply(state, chosen_action[0], chosen_action[1])
+                new_state = cast(State, simulator.apply(state, chosen_action[0], chosen_action[1]))
                 states.append(new_state)
                 taking_input = False
 
