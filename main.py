@@ -5,11 +5,12 @@ Permette di caricare un dominio e un problema su cui simulare una sequenza di az
 '''
 
 from unified_planning.io import PDDLReader
-from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action
-from unified_planning.model import Problem
-from unified_planning.engines import SequentialSimulatorMixin
+from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action, Problem, Parameter, FluentExp
+from unified_planning.engines.sequential_simulator import UPSequentialSimulator
 from typing import Dict, List, Tuple, cast
 import argparse
+
+
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
 parser.add_argument('domain', type=str, help='Path to the PDDL domain')
@@ -30,11 +31,20 @@ for obj in problem.all_objects:
 # Devo pensare una funzione per comparare due stati. Serve per trovare cicli nella simulazione
 # Non posso usare il tostring dei due stati perché i valori non sono necessatiamente nello stesso ordine
 # Due stati possono avere tutti i valori uguali ma essere comunque diversi se si prende in considerazione l'aspetto temporale della simulazione.
-def state_equality(state_a, state_b):
-    return False
+def state_equality(problem: Problem, state_a: State, state_b: State) -> bool:
+    for fluent in problem.fluents:
+        fluent: Fluent
+        parametri: List[List[Parameter]] = []
+        for parameter in fluent.signature:
+            parameter: Parameter
+            
+        # valore_a = state_a.get_value(FluentExp(fluent, ...))
+        # valore_b = state_b.get_value(FluentExp(fluent, ...))
+
+    return True
 
 with SequentialSimulator(problem) as simulator:
-    simulator: SequentialSimulatorMixin
+    simulator: UPSequentialSimulator
 
     # Stack di tutti gli stati visti
     states: List[State] = [simulator.get_initial_state()]
@@ -61,36 +71,37 @@ with SequentialSimulator(problem) as simulator:
             print("{n}: {action_name} {actual_params}".format(n=len(actions), action_name=applicable_action[0].name,actual_params=applicable_action[1]))
             actions.append(applicable_action)
         # Stampa menù
-        print("-1: Stato iniziale\n-2: Stato finale\n-3: Print stato\n-4: Undo\n-5: Quit")
+        print("i: Stato iniziale\nf: Stato finale\np: Print stato\nu: Undo\nq: Quit")
         
         taking_input = True
         while taking_input:
             # Crasha se non inserisci un numero. Per questo prototipo va bene così
-            choice = int( input("input >") )
-            if choice==-1:
+            choice: str = input("> ").strip(" ")
+            if choice=="i":
                 # Controlla se lo stato corrente è uguale a quello di partenza
-                uguali = state_equality(state, states[0])
+                uguali = state_equality(problem, state, states[0])
                 print("Sono uguali: {val}".format(val=uguali))
-            elif choice==-2:
+            elif choice=="f":
                 # Controlla se lo stato è un goal del problema
                 print("Stato finale: {val}".format(val=simulator.is_goal(state)))
-            elif choice==-3:
+            elif choice=="p":
                 # Printa lo stato corrente
                 print(str(state))
-            elif choice==-4:
+            elif choice=="u":
                 if (len(states)<2):
                     print("Already at beginning state")
                 else:
                     states.pop()
                     taking_input = False
-            elif choice==-5:
+            elif choice=="q":
                 # Esce dalla simulazione
                 taking_input = False
                 run = False
-            else:
+            elif choice.isnumeric() and 0>=int(choice) and int(choice)<len(actions):
                 # Simula l'azione scelta
-                chosen_action = actions[choice]
-                new_state = cast(State, simulator.apply(state, chosen_action[0], chosen_action[1]))
+                chosen_action = actions[int(choice)]
+                new_state = cast(State, simulator.apply_unsafe(state, chosen_action[0], chosen_action[1]))
+                tmp = simulator
                 states.append(new_state)
                 taking_input = False
 
