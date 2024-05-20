@@ -34,13 +34,22 @@ for obj in problem.all_objects:
 def state_equality(problem: Problem, state_a: State, state_b: State) -> bool:
     for fluent in problem.fluents:
         fluent: Fluent
-        parametri: List[List[Parameter]] = []
-        for parameter in fluent.signature:
-            parameter: Parameter
-            
-        # valore_a = state_a.get_value(FluentExp(fluent, ...))
-        # valore_b = state_b.get_value(FluentExp(fluent, ...))
+        parametri: List[Object] = [None]*len(fluent.signature)
+        if not fluent_equality(problem, fluent, state_a, state_b, parametri, 0):
+            return False
+    return True
 
+def fluent_equality(problem: Problem, fluent: Fluent, state_a: State, state_b: State, parametri: List[Object], index: int) -> bool:
+    signature: List[Parameter] = fluent.signature
+    for oggetto in problem.objects(signature[index].type):
+        oggetto: Object
+        parametri[index] = oggetto
+        if index == len(signature)-1:
+            if state_a.get_value(FluentExp(fluent, parametri)) != state_b.get_value(FluentExp(fluent, parametri)):
+                return False
+        else:
+            if not fluent_equality(problem, fluent, state_a, state_b, parametri, index+1):
+                return False
     return True
 
 with SequentialSimulator(problem) as simulator:
@@ -97,7 +106,7 @@ with SequentialSimulator(problem) as simulator:
                 # Esce dalla simulazione
                 taking_input = False
                 run = False
-            elif choice.isnumeric() and 0>=int(choice) and int(choice)<len(actions):
+            elif choice.isnumeric() and 0<=int(choice) and int(choice)<len(actions):
                 # Simula l'azione scelta
                 chosen_action = actions[int(choice)]
                 new_state = cast(State, simulator.apply_unsafe(state, chosen_action[0], chosen_action[1]))
