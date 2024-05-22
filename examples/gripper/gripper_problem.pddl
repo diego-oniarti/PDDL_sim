@@ -1,4 +1,4 @@
-(define (problem gripper-four-balls)
+(define (problem gripper_one_ball)
     (:domain gripper)
     (:objects roomA roomB ball hand)
     (:init 
