@@ -1,7 +1,7 @@
 from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action, Problem, Parameter, FluentExp
 from unified_planning.engines.sequential_simulator import UPSequentialSimulator
-from typing import Dict, List, Tuple, cast
+from typing import Dict, List, Tuple
 import argparse
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
