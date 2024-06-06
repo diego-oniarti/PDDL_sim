@@ -1,6 +1,6 @@
 import os
 import re
-from typing import List
+from typing import List, Self
 from enum import Enum
 
 def trim_par(x: str):
@@ -78,16 +78,17 @@ class ExpressionType(Enum):
 class Expression:
     def __init__(self, stringa: str):
         reader = StringReader(stringa)
+        self.childs: List[Expression] = []
         match reader.peak_word():
             case 'and':
                 self.ex_type = ExpressionType.AND
                 reader.skip('and')
-                self.childs = []
                 while not reader.ended():
                     self.childs.append(Expression(reader.read_parentesis()))
             case 'not':
                 self.ex_type = ExpressionType.NOT
-                self.child = Expression(reader.read_parentesis())
+                reader.skip('not')
+                self.childs.append(Expression(reader.read_parentesis()))
             case 'oneof':
                 self.ex_type = ExpressionType.ONEOF
                 reader.skip('oneof')
@@ -97,7 +98,16 @@ class Expression:
             case _:
                 self.ex_type = ExpressionType.VALUE
                 self.value = stringa
-                pass
+
+    def has_oneof(self) -> bool:
+        if self.ex_type == ExpressionType.VALUE or self.ex_type == ExpressionType.NOT:
+            return False
+        if self.ex_type == ExpressionType.ONEOF:
+            return True
+        for child in self.childs:
+            if child.has_oneof():
+                return True
+        return False
 
     def __str__(self):
         ret = ""
@@ -105,7 +115,7 @@ class Expression:
             case ExpressionType.AND:
                 ret = "and " + " ".join(map(lambda c: "({cs})".format(cs=c), self.childs))
             case ExpressionType.NOT:
-                ret = "not ({ch})".format(ch=self.child)
+                ret = "not ({ch})".format(ch=self.childs[0])
             case ExpressionType.VALUE:
                 ret = self.value
             case ExpressionType.ONEOF:
@@ -116,30 +126,45 @@ class Expression:
 - name: Str
 - parameters: Str
 - precondition: Str
-- effects: Expression
+- effect: Expression
 '''
 class Action:
-    def __init__(self, stringa: str):
+    def __init__(self, name: str, parameters: str, preconditions: str, effect: Expression):
+        self.name = name
+        self.parameters = parameters
+        self.precondition = preconditions
+        self.effect = effect
+
+    @staticmethod
+    def from_str(stringa: str):
         reader = StringReader(stringa)
         reader.skip(":action")
-        self.name = reader.read_word()
-        self.effects: List[Expression] = []
+
+        name = reader.read_word()
+        effect: Expression
+        parameters: str = ""
+        precondition: str = ""
 
         while not reader.ended():
             match reader.read_word():
                 case ':parameters':
-                    self.parameters = reader.read_parentesis()
+                    parameters = reader.read_parentesis()
                 case ':precondition':
-                    self.precondition = reader.read_parentesis()
+                    precondition = reader.read_parentesis()
                 case ':effect':
-                    self.effects.append(Expression(reader.read_parentesis()))
+                    effect = Expression(reader.read_parentesis())
+
+        return Action(name, parameters, precondition, effect)
+
+    def has_oneof(self) -> bool:
+        return self.effect.has_oneof()
 
     def __str__(self):
-        return "(:action {name} :parameters ({parameters}) :precondition ({precondition}) {effects})".format(
+        return "(:action {name} :parameters ({parameters}) :precondition ({precondition}) :effect ({effect}))".format(
                 name = self.name,
                 parameters = self.parameters,
                 precondition = self.precondition,
-                effects = " ".join(map(lambda x: ":effect ({ex})".format(ex=x), self.effects))
+                effect = self.effect
                 )
 
 '''
@@ -164,11 +189,22 @@ class Domain:
                 case 'domain':
                     self.name = reader_parentesi.read_word()
                 case ':action':
-                    self.actions.append(Action(parentesi))
+                    self.actions.append(Action.from_str(parentesi))
                 case ':requirements':
                     self.requirements = filter(lambda x: x!=':non-deterministic', reader_parentesi.rest().strip().split(' '))
                 case _:
                     self.others.append(parentesi)
+
+    def convert(self) -> None:
+        stack: List[Action] = [x for x in self.actions]
+        self.actions = []
+        while len(stack)>0:
+            corrente = stack.pop()
+            if not corrente.has_oneof():
+                self.actions.append(corrente)
+                continue
+            # TODO
+
 
     def __str__(self):
         return 'Name: \t{name}\nActions:\n{actions}\nRequirements:\n{requirements}\nOthers:\n{others}'.format(
