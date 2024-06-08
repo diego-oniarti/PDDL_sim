@@ -2,14 +2,25 @@ from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action, Problem, Parameter, FluentExp
 from unified_planning.engines.sequential_simulator import UPSequentialSimulator
 from typing import Dict, List, Tuple
+from utils.converter import Domain
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
 parser.add_argument('domain', type=str, help='Path to the PDDL domain')
 parser.add_argument('problem', type=str, help='Path to the PDDL problem')
 args = parser.parse_args()
 
-problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
+TMP_DIR_PATH = os.path.join(os.path.dirname(__file__),'TMP')
+if not os.path.exists(TMP_DIR_PATH):
+    os.mkdir(TMP_DIR_PATH)
+
+with open(os.path.join(TMP_DIR_PATH,'domain.pddl'),'w') as dom_file:
+    converted_domain = Domain.from_path(args.domain)
+    converted_domain.convert()
+    dom_file.write(converted_domain.to_pddl())
+
+problem: Problem = PDDLReader().parse_problem(os.path.join(TMP_DIR_PATH,'domain.pddl'), args.problem)
 
 # Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
 fluents: Dict[str, Fluent] = {}

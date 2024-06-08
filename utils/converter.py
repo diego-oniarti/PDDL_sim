@@ -210,6 +210,10 @@ class Domain:
                 case _:
                     self.others.append(parentesi)
 
+    @staticmethod
+    def from_path(file_path: str):
+        return Domain(file_to_string(file_path))
+
     def convert(self) -> None:
         stack: List[Action] = [x for x in self.actions]
         self.actions = []
@@ -243,10 +247,20 @@ class Domain:
 
                 stack.append(Action(new_action_name, new_action_parameters, new_action_precondition, new_action_effect))
 
+    def to_pddl(self) -> str:
+        return "(define (domain {name}){requirements}{others}{actions})".format(
+                name=self.name,
+                requirements = "" if not hasattr(self,'requirements') else "(:requirements {xs})".format(
+                    xs=" ".join(self.requirements)
+                    ),
+                actions = " "+" ".join(map(lambda act: str(act), self.actions)),
+                others = " "+" ".join(map(lambda other: "("+other+")", self.others)),
+                )
+
     def __str__(self):
         return 'Name: \t{name}\nActions:\n{actions}\nRequirements:\n{requirements}\nOthers:\n{others}'.format(
             name=self.name,
-            requirements="\n".join(self.requirements),
+            requirements= "None" if not hasattr(self,'requirements') else "\n".join(self.requirements),
             actions="\n".join(map(lambda x: str(x), self.actions)),
             others = "\n".join(self.others)
         )
@@ -278,3 +292,5 @@ if __name__ == '__main__':
     dom.convert()
     print("CONVERTED DOMAIN")
     print(dom)
+    print("PDDL")
+    print(dom.to_pddl())
