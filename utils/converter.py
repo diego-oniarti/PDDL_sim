@@ -2,6 +2,7 @@ import os
 import re
 from typing import List, Self
 from enum import Enum
+from collections import deque
 
 def trim_par(x: str):
     return x.lstrip("(").rstrip(")")
@@ -76,25 +77,27 @@ class ExpressionType(Enum):
     VALUE = 4
 
 class Expression:
-    def __init__(self, stringa: str):
+    def __init__(self, stringa: str, exp_id=0, parent: (None|Self)=None):
         reader = StringReader(stringa)
         self.childs: List[Expression] = []
+        self.id = exp_id
+        self.parent=parent
         match reader.peak_word():
             case 'and':
                 self.ex_type = ExpressionType.AND
                 reader.skip('and')
                 while not reader.ended():
-                    self.childs.append(Expression(reader.read_parentesis()))
+                    self.childs.append(Expression(reader.read_parentesis(), self.id+1+len(self.childs),self ))
             case 'not':
                 self.ex_type = ExpressionType.NOT
                 reader.skip('not')
-                self.childs.append(Expression(reader.read_parentesis()))
+                self.childs.append(Expression(reader.read_parentesis(), self.id+1,self) )
             case 'oneof':
                 self.ex_type = ExpressionType.ONEOF
                 reader.skip('oneof')
                 self.childs = []
                 while not reader.ended():
-                    self.childs.append(Expression(reader.read_parentesis()))
+                    self.childs.append(Expression(reader.read_parentesis(), self.id+1+len(self.childs), self ))
             case _:
                 self.ex_type = ExpressionType.VALUE
                 self.value = stringa
@@ -159,6 +162,18 @@ class Action:
     def has_oneof(self) -> bool:
         return self.effect.has_oneof()
 
+    def first_oneof(self) -> (Expression|None):
+        Q = deque()
+        cur: (Expression|None) = self.effect
+        while (cur is not None) and (cur.ex_type != ExpressionType.ONEOF):
+            for child in cur.childs:
+                Q.append(child)
+                if len(Q)>0:
+                    cur = Q.popleft()
+                else:
+                    cur = None
+        return cur
+
     def __str__(self):
         return "(:action {name} :parameters ({parameters}) :precondition ({precondition}) :effect ({effect}))".format(
                 name = self.name,
@@ -191,7 +206,7 @@ class Domain:
                 case ':action':
                     self.actions.append(Action.from_str(parentesi))
                 case ':requirements':
-                    self.requirements = filter(lambda x: x!=':non-deterministic', reader_parentesi.rest().strip().split(' '))
+                    self.requirements = list(filter(lambda x: x!=':non-deterministic', reader_parentesi.rest().strip().split(' ')))
                 case _:
                     self.others.append(parentesi)
 
@@ -203,8 +218,30 @@ class Domain:
             if not corrente.has_oneof():
                 self.actions.append(corrente)
                 continue
-            # TODO
 
+            bivio = corrente.first_oneof()
+            N = len(bivio.childs)
+            for i in range(N):
+                new_action_name = corrente.name + "_def"+str(i)
+                new_action_parameters = corrente.parameters
+                new_action_precondition = corrente.precondition
+                new_action_effect = Expression(str(corrente.effect))
+                if bivio.id==0:
+                    new_action_effect = new_action_effect.childs[i]
+                else:
+                    correction_stack = [new_action_effect]
+                    stop=False
+                    while not stop and len(correction_stack) > 0:
+                        cur = correction_stack.pop()
+                        if cur.id==bivio.id:
+                            cur_index = cur.parent.childs.index(cur)
+                            cur.parent.childs[cur_index] = cur.childs[i]
+                            stop=True
+                        else:
+                            for child in cur.childs:
+                                correction_stack.append(child)
+
+                stack.append(Action(new_action_name, new_action_parameters, new_action_precondition, new_action_effect))
 
     def __str__(self):
         return 'Name: \t{name}\nActions:\n{actions}\nRequirements:\n{requirements}\nOthers:\n{others}'.format(
@@ -235,4 +272,9 @@ if __name__ == '__main__':
     # print(convert("examples/table/domain.pddl"))
     # print(convert("examples/jars/jar_domain.pddl"))
     contents = file_to_string("examples/table/domain.pddl")
-    print(Domain(contents))
+    dom = Domain(contents)
+    print("INITIAL DOMAIN")
+    print(dom)
+    dom.convert()
+    print("CONVERTED DOMAIN")
+    print(dom)
