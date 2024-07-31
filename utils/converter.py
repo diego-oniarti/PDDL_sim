@@ -1,6 +1,6 @@
 import os
 import re
-from typing import List, Self
+from typing import List
 from enum import Enum
 from collections import deque
 
@@ -77,7 +77,7 @@ class ExpressionType(Enum):
     VALUE = 4
 
 class Expression:
-    def __init__(self, stringa: str, exp_id=0, parent: (None|Self)=None):
+    def __init__(self, stringa: str, exp_id=0, parent=None):
         reader = StringReader(stringa)
         self.childs: List[Expression] = []
         self.id = exp_id

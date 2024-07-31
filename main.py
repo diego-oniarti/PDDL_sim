@@ -11,16 +11,8 @@ parser.add_argument('domain', type=str, help='Path to the PDDL domain')
 parser.add_argument('problem', type=str, help='Path to the PDDL problem')
 args = parser.parse_args()
 
-TMP_DIR_PATH = os.path.join(os.path.dirname(__file__),'TMP')
-if not os.path.exists(TMP_DIR_PATH):
-    os.mkdir(TMP_DIR_PATH)
-
-with open(os.path.join(TMP_DIR_PATH,'domain.pddl'),'w') as dom_file:
-    converted_domain = Domain.from_path(args.domain)
-    converted_domain.convert()
-    dom_file.write(converted_domain.to_pddl())
-
-problem: Problem = PDDLReader().parse_problem(os.path.join(TMP_DIR_PATH,'domain.pddl'), args.problem)
+'''
+problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
 
 # Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
 fluents: Dict[str, Fluent] = {}
@@ -30,6 +22,7 @@ for fluent in problem.fluents:
 objects: Dict[str, Object] = {}
 for obj in problem.all_objects:
     objects[obj.name] = obj
+'''
 
 # Controlla l'uguaglianza tra due stati SOLO in base ai fluent
 def state_equality(problem: Problem, state_a: State, state_b: State) -> bool:
@@ -110,5 +103,8 @@ def main():
                             states.append(new_state)
                             taking_input = False
 
+
 if __name__ == '__main__':
-   main() 
+    # main() 
+    a = PDDLReader().parse_problem("./examples/oneof/domain.pddl")
+    print(a)
