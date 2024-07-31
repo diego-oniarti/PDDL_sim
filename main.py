@@ -2,16 +2,13 @@ from unified_planning.io import PDDLReader
 from unified_planning.shortcuts import SequentialSimulator, Fluent, Object, State, Action, Problem, Parameter, FluentExp
 from unified_planning.engines.sequential_simulator import UPSequentialSimulator
 from typing import Dict, List, Tuple
-from utils.converter import Domain
 import argparse
-import os
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
 parser.add_argument('domain', type=str, help='Path to the PDDL domain')
 parser.add_argument('problem', type=str, help='Path to the PDDL problem')
 args = parser.parse_args()
 
-'''
 problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
 
 # Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
@@ -22,7 +19,6 @@ for fluent in problem.fluents:
 objects: Dict[str, Object] = {}
 for obj in problem.all_objects:
     objects[obj.name] = obj
-'''
 
 # Controlla l'uguaglianza tra due stati SOLO in base ai fluent
 def state_equality(problem: Problem, state_a: State, state_b: State) -> bool:
@@ -49,7 +45,7 @@ def fluent_equality(problem: Problem, fluent: Fluent, state_a: State, state_b: S
 def main():
     with SequentialSimulator(problem) as simulator:
         simulator: UPSequentialSimulator
-        
+
         # Stack di tutti gli stati visti
         states: List[State] = [simulator.get_initial_state()]
         run: bool = True
@@ -57,7 +53,7 @@ def main():
             print("\nState number: {n}".format(n=len(states)))
             # Prendi lo stato corrente dalla cima della stack
             state: State = states[len(states)-1]
-            
+
             print("Applicable Actions")
             # get_applicable_actions -> (Action, (actual params...))
             applicable_actions = simulator.get_applicable_actions(state)
@@ -68,7 +64,7 @@ def main():
                 actions.append(applicable_action)
             # Stampa menù
             print("i: Stato iniziale\nf: Stato finale\np: Print stato\nu: Undo\nq: Quit")
-            
+
             taking_input = True
             while taking_input:
                 # Crasha se non inserisci un numero. Per questo prototipo va bene così
@@ -105,6 +101,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # main() 
-    a = PDDLReader().parse_problem("./examples/oneof/domain.pddl")
-    print(a)
+    main() 
