@@ -1,13 +1,32 @@
-import {a} from './classi.js'
+const sketch = async p => {
+    const view_box = document.getElementById("graph_view");
+    new ResizeObserver(()=>{
+        p.resizeCanvas(view_box.clientWidth, view_box.clientHeight);
+    }).observe(view_box);
 
-new p5(p=>{
+    let grafo = await get_graph();
+    console.log(grafo)
+
     p.setup = function() {
-        p.createCanvas(400,400);
+        let canvas = p.createCanvas(view_box.offsetWidth, view_box.offsetHeight);
+        canvas.parent(view_box)
+        canvas.id("canvas")
     }
 
     p.draw = function() {
         p.background(50);
     }
-})
+}
 
-a()
+function get_graph() {
+    return fetch("get_graph")
+    .then(res=>res.json())
+    .then(data=>{
+        return data.nodes;
+    });
+}
+
+
+window.addEventListener("load",()=>{
+    new p5(sketch);
+})

@@ -2,7 +2,79 @@
     font-family: FiraCode;
     src: url('FiraCode/FiraCodeNerdFont-Regular.ttf');
 }
-
 * {
     font-family: FiraCode;
+}
+body {
+    margin: 0px;
+}
+
+#main_container {
+    width: 100%;
+    height: calc(100vh - 31px);
+    background-color: lightgray;
+    display: flex;
+    flex-direction: column
+}
+#header {
+    display: flex;
+    flex-direction: row;
+    font-size: 25;
+}
+
+#top {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    flex: 1 1 auto;
+}
+
+#graph_view {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+#horizontal_drag {
+    width: 12px;
+    height: 100%;
+    position: sticky;
+    left: 0px;
+}
+#horizontal_drag:hover {
+    cursor: col-resize;
+}
+
+#state_description {
+    background-color: greenyellow;
+    height: 100%;
+    width: 40%;
+    position: relative;
+    flex: 1 0 auto;
+    display: none;
+}
+
+#vertical_drag {
+    height: 12px;
+    width: 100%;
+    position: sticky;
+    top: 0px;
+}
+#vertical_drag:hover {
+    cursor: row-resize;
+}
+
+#details {
+    background-color: ghostwhite;
+    flex: 1 0 auto;
+    position: relative;
+    height: 40%;
+    overflow-y: auto;
+}
+
+#canvas {
+    position: absolute;
+    top:0;
+    left:0;
 }

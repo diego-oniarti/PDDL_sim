@@ -3,10 +3,29 @@
         <title>PDDL sim</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.min.js"></script>
         <link rel="stylesheet" href="css/main.css">
+        <script src="js/resize.js"></script>
+        <script src="js/startup.js"></script>
     </head>
     <body>
-        <h1>PDDL sim</h1>
+        <div id="header">
+            <span>PDDL Sim<span>
+        </div>
+        <div id="main_container">
+            <div id="top">
+                <div id="graph_view"></div>
+                <div id="state_description">
+                    <div id="horizontal_drag"></div>
+                </div>
+            </div>
+            <div id="details">
+                <div id="vertical_drag"></div>
+                <h1>Fluents</h1>
+                <div id="fluents_list"></div>
 
-        <script type="module" src="js/main.js" defer></script>
+                <h1>Objects</h1>
+                <div id="objects_list"></div>
+            </div>
+        </div>
+        <script type="module" src="js/main.js" defer></script> 
     </body>
 </html>

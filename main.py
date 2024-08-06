@@ -225,8 +225,6 @@ with SequentialSimulator(problem) as simulator:
 
         return ('', 200)
 
-
-
     @app.route('/<path:path>')
     def serve_static(path):
         return send_from_directory('static', path)
