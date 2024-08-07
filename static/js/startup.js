@@ -3,11 +3,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
     fetch("./get_fluents")
     .then(res=>res.json())
     .then(data=>{
-        for (let fluent of data.fluents) {
-            let nuovo = document.createElement("p");
-            nuovo.innerText = fluent.str;
-            fluents_list.appendChild(nuovo);
-        }
+        let nuovo = document.createElement("p");
+        nuovo.innerHTML = data.fluents.map(f=>f.str).join("<br/>");
+        fluents_list.appendChild(nuovo);
     })
     .catch(err=>{
         console.log(err)
@@ -18,7 +16,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
     .then(res=>res.json())
     .then(data=>{
         for (let tipo in data.objects) {
-            let nuovo_nome = document.createElement("h3");
+            let nuovo_nome = document.createElement("span");
             nuovo_nome.innerText = tipo;
             objects_list.appendChild(nuovo_nome);
             let nuovo_ul = document.createElement("ul");

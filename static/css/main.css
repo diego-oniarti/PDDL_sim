@@ -23,6 +23,7 @@ body {
 }
 
 #top {
+    background-color: lightgray;
     display: flex;
     flex-direction: row;
     height: 100%;
@@ -39,20 +40,23 @@ body {
 #horizontal_drag {
     width: 12px;
     height: 100%;
-    position: sticky;
-    left: 0px;
+    display: none;
 }
 #horizontal_drag:hover {
     cursor: col-resize;
 }
 
 #state_description {
-    background-color: greenyellow;
     height: 100%;
-    width: 40%;
+    width: 30%;
     position: relative;
     flex: 1 0 auto;
     display: none;
+    overflow-x: scroll;
+    white-space: nowrap;
+}
+#state_params{
+    max-height: 100px;
 }
 
 #vertical_drag {

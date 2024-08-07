@@ -1,30 +1,121 @@
-const sketch = async p => {
+import { build_tree, get_nodes } from "./classi.js"
+
+const sketch = p => {
     const view_box = document.getElementById("graph_view");
     new ResizeObserver(()=>{
-        p.resizeCanvas(view_box.clientWidth, view_box.clientHeight);
+        p.resizeCanvas(view_box.clientWidth, view_box.clientHeight-10);
     }).observe(view_box);
 
-    let grafo = await get_graph();
-    console.log(grafo)
+    let graph, nodes;
+    let posX=0;
+    let posY=0;
 
-    p.setup = function() {
+    p.setup = async function() {
         let canvas = p.createCanvas(view_box.offsetWidth, view_box.offsetHeight);
         canvas.parent(view_box)
-        canvas.id("canvas")
+
+        graph = await build_graph();
+        nodes = get_nodes(graph);
     }
 
     p.draw = function() {
-        p.background(50);
+        p.background(250,250,220);
+        if (nodes===undefined) return;
+        graph.moveto(posX,posY);
+        for (let node of nodes) {
+            // Scegli il colore
+            p.fill(255); p.stroke(0)
+            if (node.final) p.fill(200,250,200);
+            if (node.reference) p.fill(200,200,250);
+
+            // Disegna il rettangolo
+            p.rect(node.rect.x, node.rect.y, node.rect.w, node.rect.h);
+
+            // Scrivi l'id
+            p.fill(0); p.noStroke();
+            p.textAlign(p.CENTER,p.CENTER);
+            p.text(
+                node.id, 
+                node.rect.x+node.rect.w/2,
+                node.rect.y+node.rect.h/2
+            );
+
+            // Disegna la linea
+            p.stroke(0);
+            for (let seg of node.linea.segments) {
+                p.line(seg.a,seg.b, seg.x,seg.y);
+            }
+        }
+    }
+
+    let opened = -1;
+    p.mouseClicked = async function() {
+        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        const state_description = document.getElementById("state_description");
+        const horizontal_drag = document.getElementById("horizontal_drag");
+
+        for (let node of nodes) {
+            if (node.rect.contains(p.mouseX, p.mouseY)) {
+                if (opened == node.id) {
+                    state_description.style.display = "none";
+                    horizontal_drag.style.display = "none";
+                    opened = -1;
+                }else{
+                    state_description.style.display = "unset";
+                    horizontal_drag.style.display = "unset";
+                    load_description(node.id);
+                    opened = node.id;
+                }
+            }
+        }
+    }
+
+    let oldX, oldY;
+    p.mousePressed = function() {
+        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        oldX = p.mouseX;
+        oldY = p.mouseY;
+    }
+    p.mouseDragged = function() {
+        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        posX += p.mouseX-oldX;
+        posY += p.mouseY-oldY;
+        oldX = p.mouseX;
+        oldY = p.mouseY;
+    }
+
+    function load_description(id) {
+        fetch(`state_description?id=${id}`)
+        .then(res=>res.json())
+        .then(data=>{
+            let fluents = data.fluents;
+            const state_name = document.getElementById("state_name");
+            state_name.innerText = `State ${id}`;
+            const state_params = document.getElementById("state_params");
+            let lines = [];
+            for (let name in fluents) {
+                for (let a of fluents[name]) {
+                    lines.push(`${name}[${a.parameters}] := ${a.value}`);
+                }
+            }
+            state_params.innerHTML = lines.join("<br/>")
+        });
+    }
+
+    async function get_graph() {
+        return await fetch("get_graph")
+            .then(res=>res.json())
+            .then(data=>{
+                return data.nodes;
+            });
+    }
+
+    async function build_graph() {
+        let nodes = await get_graph();
+        return build_tree(nodes);
     }
 }
 
-function get_graph() {
-    return fetch("get_graph")
-    .then(res=>res.json())
-    .then(data=>{
-        return data.nodes;
-    });
-}
 
 
 window.addEventListener("load",()=>{
