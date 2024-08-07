@@ -9,11 +9,18 @@ window.addEventListener("load", ()=>{
     let dragging_hor = false;
     let dragging_ver = false;
 
-    horizontal_drag.addEventListener("mousedown", ()=>{dragging_hor = true;});
-    vertical_drag.addEventListener("mousedown", ()=>{dragging_ver = true;});
+    horizontal_drag.addEventListener("mousedown", ()=>{
+        dragging_hor = true;
+        document.body.style.userSelect = 'none'; // Prevent text selection
+    });
+    vertical_drag.addEventListener("mousedown", ()=>{
+        dragging_ver = true;
+        document.body.style.userSelect = 'none'; // Prevent text selection
+    });
     window.addEventListener("mouseup", ()=>{
         dragging_hor = false;
         dragging_ver = false;
+        document.body.style.userSelect = 'unset'; // Prevent text selection
     });
 
     document.addEventListener("mousemove", e=>{

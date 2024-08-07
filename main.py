@@ -18,6 +18,7 @@ from utils.simulator_utils import state_equality2
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
 parser.add_argument('domain', type=str, help='Path to the PDDL domain')
 parser.add_argument('problem', type=str, help='Path to the PDDL problem')
+parser.add_argument('-s', '--no-browser', action='store_true', help='Stops the browser from opening')
 args = parser.parse_args()
 
 problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
@@ -235,5 +236,6 @@ if __name__ == '__main__':
     host = "127.0.0.1"
     link = f"http://{host}:{port}/index.html"
     print(f"GUI at {link}")
-    webbrowser.open_new(link)
+    if not args.no_browser:
+        webbrowser.open_new(link)
     serve(app, host=host, port=port)

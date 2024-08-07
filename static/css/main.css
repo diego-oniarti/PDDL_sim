@@ -95,6 +95,9 @@ body {
     height: 40%;
     overflow-y: auto;
 }
+#details ul {
+    margin: 2px;
+}
 
 #canvas {
     position: absolute;

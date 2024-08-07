@@ -17,8 +17,9 @@ window.addEventListener("DOMContentLoaded", ()=>{
     .then(data=>{
         for (let tipo in data.objects) {
             let nuovo_nome = document.createElement("span");
-            nuovo_nome.innerText = tipo;
+            nuovo_nome.innerText = `Type: ${tipo}`;
             objects_list.appendChild(nuovo_nome);
+
             let nuovo_ul = document.createElement("ul");
             objects_list.appendChild(nuovo_ul);
             for (let oggetto of data.objects[tipo]) {

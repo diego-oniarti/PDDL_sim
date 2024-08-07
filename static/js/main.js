@@ -35,34 +35,51 @@ const sketch = p => {
     }
 
     let opened = -1;
-    p.mouseClicked = async function() {
+    let oldX, oldY;
+    let pressed = -1;
+    let dragging = false;
+    p.mousePressed = function() {
         if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
-        const state_description = document.getElementById("state_description");
-        const horizontal_drag = document.getElementById("horizontal_drag");
 
+        let on_card = false;
         for (let node of nodes) {
             if (node.rect.contains(p.mouseX, p.mouseY)) {
-                if (opened == node.id) {
-                    state_description.style.display = "none";
-                    horizontal_drag.style.display = "none";
-                    opened = -1;
-                }else{
-                    state_description.style.display = "unset";
-                    horizontal_drag.style.display = "unset";
-                    load_description(node.id);
-                    opened = node.id;
-                }
+                pressed = node.id;
+                on_card=true;
+                break;
             }
+        }
+        if (!on_card) {
+            dragging = true;
+            document.body.style.userSelect = 'none'; // Prevent text selection
+            oldX = p.mouseX;
+            oldY = p.mouseY;
         }
     }
 
-    let oldX, oldY;
-    p.mousePressed = function() {
-        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
-        oldX = p.mouseX;
-        oldY = p.mouseY;
+    p.mouseReleased = function() {
+        const state_description = document.getElementById("state_description");
+        const horizontal_drag = document.getElementById("horizontal_drag");
+        if (!(dragging || (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height))) {
+            if (opened == pressed) {
+                state_description.style.display = "none";
+                horizontal_drag.style.display = "none";
+                opened = -1;
+            }else{
+                state_description.style.display = "unset";
+                horizontal_drag.style.display = "unset";
+                load_description(pressed);
+                opened = pressed;
+            }
+        }
+        if (dragging) {
+            document.body.style.userSelect = 'unset'; // Prevent text selection
+        }
+        pressed=false;
+        dragging = false;
     }
     p.mouseDragged = function() {
+        if (!dragging) return;
         if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
         posX += p.mouseX-oldX;
         posY += p.mouseY-oldY;
