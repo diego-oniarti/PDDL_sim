@@ -17,6 +17,8 @@ body {
     border: 1px solid black;
     position: absolute;
     top: 0;
+    font-size: small;
+    border-radius: 10px;
 }
 .card.finale {
     background-color: rgb(200,250,200);

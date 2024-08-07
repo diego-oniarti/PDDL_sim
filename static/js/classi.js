@@ -9,11 +9,8 @@ class Nodo {
         this.children = [];
         this.final = false;
         this.reference = false;
-        this.elem = document.createElement("div")
-        this.elem.innerHTML = `<span>${id}</span>`;
-        this.elem.classList.add("card");
-        document.getElementById("graph_view").appendChild(this.elem)
-        this.rect = new Box(0,0,50,30);
+
+        this.elem = create_card(id); 
         this.rect = box_from_elem(this.elem);
     }
 
@@ -199,4 +196,16 @@ function box_from_elem(elem) {
     return new Box(
         0,0,r.width,r.height
     );
+}
+
+function create_card(id) {
+    const elem = document.createElement("div")
+    elem.innerHTML = `
+        <span>${id}</span>
+        <hr/>
+        <span>state diff</span>
+        `;
+    elem.classList.add("card");
+    document.getElementById("graph_view").appendChild(elem)
+    return elem
 }
