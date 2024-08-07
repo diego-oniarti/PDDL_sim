@@ -9,6 +9,23 @@ body {
     margin: 0px;
 }
 
+.card {
+    background-color: white;
+    width: fit-content;
+    height: fit-content;
+    padding: 10px;
+    border: 1px solid black;
+    position: absolute;
+    top: 0;
+}
+.card.finale {
+    background-color: rgb(200,250,200);
+}
+.card.dummy {
+    background-color: rgb(200,200,250);
+    border-style: dashed;
+}
+
 #main_container {
     width: 100%;
     height: calc(100vh - 31px);

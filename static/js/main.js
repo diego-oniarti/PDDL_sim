@@ -23,22 +23,8 @@ const sketch = p => {
         if (nodes===undefined) return;
         graph.moveto(posX,posY);
         for (let node of nodes) {
-            // Scegli il colore
-            p.fill(255); p.stroke(0)
-            if (node.final) p.fill(200,250,200);
-            if (node.reference) p.fill(200,200,250);
-
-            // Disegna il rettangolo
-            p.rect(node.rect.x, node.rect.y, node.rect.w, node.rect.h);
-
-            // Scrivi l'id
-            p.fill(0); p.noStroke();
-            p.textAlign(p.CENTER,p.CENTER);
-            p.text(
-                node.id, 
-                node.rect.x+node.rect.w/2,
-                node.rect.y+node.rect.h/2
-            );
+            node.elem.style.top = node.rect.y;
+            node.elem.style.left = node.rect.x;
 
             // Disegna la linea
             p.stroke(0);

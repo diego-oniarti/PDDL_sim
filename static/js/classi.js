@@ -6,10 +6,15 @@ class Nodo {
         this.id = id;
         this.linea = new Line();
         this.bounding_box = new Box();
-        this.rect = new Box(0, 0, 50, 30);
         this.children = [];
         this.final = false;
         this.reference = false;
+        this.elem = document.createElement("div")
+        this.elem.innerHTML = `<span>${id}</span>`;
+        this.elem.classList.add("card");
+        document.getElementById("graph_view").appendChild(this.elem)
+        this.rect = new Box(0,0,50,30);
+        this.rect = box_from_elem(this.elem);
     }
 
     compute_box() {
@@ -117,13 +122,17 @@ export function build_tree(raw_nodes) {
         const raw = raw_nodes[corrente.id];
         visited.push(corrente.id)
 
-        if (raw.is_final) corrente.final=true;
+        if (raw.is_final) {
+            corrente.final=true;
+            corrente.elem.classList.add("finale");
+        }
         
         if (raw.children) {
             for (let child_id of raw.children) {
                 const new_son = new Nodo(child_id);
                 if (visited.includes(child_id)) {
                     new_son.reference = true;
+                    new_son.elem.classList.add("dummy")
                 }else{
                     queue.unshift(new_son);
                 }
@@ -183,4 +192,11 @@ class Box {
     contains(x,y) {
         return (x>this.x) && (x<this.x+this.w) && (y>this.y) && (y<this.y+this.h);
     }
+}
+
+function box_from_elem(elem) {
+    const r = elem.getBoundingClientRect();
+    return new Box(
+        0,0,r.width,r.height
+    );
 }
