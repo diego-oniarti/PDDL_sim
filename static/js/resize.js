@@ -1,7 +1,6 @@
 window.addEventListener("load", ()=>{
     const horizontal_drag = document.getElementById("horizontal_drag");
     const vertical_drag = document.getElementById("vertical_drag");
-    const main_container = document.getElementById("main_container");
 
     const state_description = document.getElementById("state_description");
     const details = document.getElementById("details")
@@ -25,11 +24,11 @@ window.addEventListener("load", ()=>{
 
     document.addEventListener("mousemove", e=>{
         if (dragging_hor) {
-            const new_w = window.innerWidth - e.x;
+            const new_w = Math.max(20,window.innerWidth - e.x-10);
             state_description.style.width = `${new_w}px`
         }
         if (dragging_ver) {
-            const new_h = window.innerHeight - e.y;
+            const new_h = Math.max(20, window.innerHeight - e.y);
             details.style.height = `${new_h}px`;
         }
     });

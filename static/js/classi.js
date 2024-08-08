@@ -1,3 +1,5 @@
+import { start_choice } from "./choice_modal.js";
+
 const LINE_SPACING = 50;
 const GAP = 10;
 
@@ -121,6 +123,7 @@ class Nodo {
 }
 
 export function build_tree(raw_nodes) {
+    raw_nodes.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
     const visited = [];
     const head = new Nodo(0, raw_nodes[0]);
 
@@ -145,7 +148,7 @@ export function build_tree(raw_nodes) {
                         <span>goto ${child_id}</span>
                     `;
                     new_son.rect = box_from_elem(new_son.elem);
-                    new_son.legend.remove()
+                    new_son.legend?.remove()
                     new_son.legend = undefined;
                 }else{
                     queue.unshift(new_son);
@@ -216,24 +219,41 @@ function box_from_elem(elem) {
     );
 }
 
+let description_open = false;
+let description_number=-1;
 function create_card(id, raw) {
     const elem = document.createElement("div")
+    const info_button_id = `info_button_${id}`;
+    const choice_button_id = `choice_button_${id}`;
+        elem.innerHTML = `
+        <div>
+            <span>${id}</span>
+            <div>
+                <button id="${choice_button_id}" class="choice_button">choice</button>
+                <button id="${info_button_id}" class="info_button">i</button>
+            </div>
+        </div>
+        <hr/>
+        `;
     if (id==0) {
-        elem.innerHTML = `
-        <span>${id}</span>
-        <hr/>
-        <span>Initial State</span>
-        `;
+        elem.innerHTML += "<span>Initial State</span>";
     }else{
-        elem.innerHTML = `
-        <span>${id}</span>
-        <hr/>
-        ${raw.diff.map(x=>"<span>"+x+"</span>").join("<br/>")}
-        `;
+        elem.innerHTML += raw.diff.map(x=>"<span>"+x+"</span>").join("<br/>");
     }
     elem.classList.add("card");
     document.getElementById("graph_view").appendChild(elem)
-    return elem
+    document.getElementById(info_button_id).onclick = ()=>{
+        click_card(id)
+    };
+
+    if (raw.choice) {
+        document.getElementById(choice_button_id).remove();
+    }else{
+        document.getElementById(choice_button_id).onclick = ()=>{
+            start_choice(id)
+        };
+    }
+    return elem;
 }
 
 function create_legend(text) {
@@ -243,3 +263,40 @@ function create_legend(text) {
     document.getElementById("graph_view").appendChild(elem)
     return elem;
 }
+
+function click_card(id) {
+    const state_description = document.getElementById("state_description");
+    const horizontal_drag = document.getElementById("horizontal_drag");
+    if (description_open && description_number==id) {
+        state_description.style.display = "none";
+        horizontal_drag.style.display = "none";
+        description_open = false;
+    }else{
+        state_description.style.display = "unset";
+        horizontal_drag.style.display = "unset";
+        load_description(id);
+        description_number = id;
+        description_open = true;
+    }
+}
+
+function load_description(id) {
+    fetch(`state_description?id=${id}`)
+        .then(res=>res.json())
+        .then(data=>{
+            let fluents = data.fluents;
+            const state_name = document.getElementById("state_name");
+            state_name.innerText = `State ${id}`;
+            const state_params = document.getElementById("state_params");
+            let lines = [];
+            for (let name in fluents) {
+                for (let a of fluents[name]) {
+                    if (a.value!="falsez")
+                        lines.push(`${name}[${a.parameters}] := ${a.value}`);
+                }
+            }
+            state_params.innerHTML = lines.join("<br/>")
+        });
+}
+
+

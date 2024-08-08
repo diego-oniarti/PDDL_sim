@@ -1,12 +1,12 @@
 import { build_tree, get_nodes } from "./classi.js"
 
+let graph, nodes=[];
 const sketch = p => {
     const view_box = document.getElementById("graph_view");
     new ResizeObserver(()=>{
         p.resizeCanvas(view_box.clientWidth, view_box.clientHeight-10);
     }).observe(view_box);
 
-    let graph, nodes;
     let posX=0;
     let posY=0;
 
@@ -14,15 +14,14 @@ const sketch = p => {
         let canvas = p.createCanvas(view_box.offsetWidth, view_box.offsetHeight);
         canvas.parent(view_box)
 
-        graph = await build_graph();
-        nodes = get_nodes(graph);
+        await update_graph();
     }
 
     const center_button = document.getElementById("center_button");
     p.draw = function() {
         const view = document.getElementById("graph_view").getBoundingClientRect();
         p.background(250,250,220);
-        if (nodes===undefined) return;
+        if (graph===undefined) return;
         graph.moveto(posX,posY);
         for (let node of nodes) {
             node.elem.style.top = node.rect.y;
@@ -64,7 +63,9 @@ const sketch = p => {
     let oldX, oldY;
     let prevent_drag = false;
     p.mousePressed = function() {
-        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) {
+        const mouse_out_of_canvas = (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height);
+        const modal_open = document.getElementById("choice_modal").style.display == "unset";
+        if (mouse_out_of_canvas || modal_open) {
             prevent_drag=true;
             return;
         }
@@ -90,16 +91,18 @@ const sketch = p => {
         prevent_drag=false;
         document.body.style.userSelect = 'unset'; // Prevent text selection
     }
+    p.mouseWheel = function(e) {
+        if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        if (e.delta>0) {
+            posY -= 50;
+        }else{
+            posY += 50;
+        }
+    }
 
-    let description_open = false;
-    let description_number;
     p.mouseClicked = function() {
         if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
         for (let nodo of nodes) {
-            if (nodo.rect.contains(p.mouseX, p.mouseY)) {
-                click_card(nodo.id)
-                return;
-            }
             if (nodo.linea?.bounding_box.contains(p.mouseX, p.mouseY)) {
                 undo_choice(nodo.id);
                 return;
@@ -111,59 +114,8 @@ const sketch = p => {
         if (!confirm("Do you wish to undo this choice and all the subsequent ones?")) return;
         fetch(`undo_choice?id=${id}`)
             .then(async ()=>{
-                for (let node of nodes) {
-                    node.elem.remove();
-                    node.legend?.remove();
-                }
-                graph = await build_graph();
-                nodes = get_nodes(graph);
+                update_graph();
             });
-    }
-    function click_card(id) {
-        const state_description = document.getElementById("state_description");
-        const horizontal_drag = document.getElementById("horizontal_drag");
-        if (description_open && description_number==id) {
-            state_description.style.display = "none";
-            horizontal_drag.style.display = "none";
-            description_open = false;
-        }else{
-            state_description.style.display = "unset";
-            horizontal_drag.style.display = "unset";
-            load_description(id);
-            description_number = id;
-            description_open = true;
-        }
-    }
-
-    function load_description(id) {
-        fetch(`state_description?id=${id}`)
-            .then(res=>res.json())
-            .then(data=>{
-                let fluents = data.fluents;
-                const state_name = document.getElementById("state_name");
-                state_name.innerText = `State ${id}`;
-                const state_params = document.getElementById("state_params");
-                let lines = [];
-                for (let name in fluents) {
-                    for (let a of fluents[name]) {
-                        lines.push(`${name}[${a.parameters}] := ${a.value}`);
-                    }
-                }
-                state_params.innerHTML = lines.join("<br/>")
-            });
-    }
-
-    async function get_graph() {
-        return await fetch("get_graph")
-            .then(res=>res.json())
-            .then(data=>{
-                return data.nodes;
-            });
-    }
-
-    async function build_graph() {
-        let nodes = await get_graph();
-        return build_tree(nodes);
     }
 
     center_button.addEventListener("click",()=>{
@@ -172,7 +124,36 @@ const sketch = p => {
     });
 }
 
+async function update_graph() {
+    for (let node of nodes) {
+        node.elem.remove();
+        node.legend?.remove();
+    }
+    graph = await build_graph();
+    nodes = get_nodes(graph);
+}
+async function get_graph() {
+    return await fetch("get_graph")
+        .then(res=>res.json())
+        .then(data=>{
+            return data.nodes;
+        });
+}
+async function build_graph() {
+    let nodes = await get_graph();
+    return build_tree(nodes);
+}
+
 
 window.addEventListener("load",()=>{
     new p5(sketch);
-})
+});
+document.getElementById("choice_modal").addEventListener("click",e=>{
+    e.target.style.display="none";
+});
+document.getElementById("choice_modal_content").addEventListener("click",e=>{
+    e.stopPropagation();
+});
+document.addEventListener("choice_made",()=>{
+    update_graph();
+});
