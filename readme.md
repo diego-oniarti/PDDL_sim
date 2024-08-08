@@ -9,7 +9,7 @@ python main.py path_to_domain.pddl path_to_problem.pddl
 # TODO
 - [x] Simulare domini deterministici
 - [x] Simulare domini non deterministici (vedi: FOND)
-- [ ] Implementare una GUI
+- [x] Implementare una GUI
 - [ ] Aggiungere supporto per azioni con durata
 
 # Examples
