@@ -9,6 +9,15 @@ body {
     margin: 0px;
 }
 
+.legend {
+    position: absolute;
+    top:0;
+    left:0;
+}
+.legend.hovering {
+    color:red;
+    font-weight: bold;
+}
 .card {
     background-color: white;
     width: fit-content;
@@ -31,18 +40,19 @@ body {
 #main_container {
     width: 100%;
     height: calc(100vh - 31px);
-    background-color: lightgray;
+    background-color: ghostwhite;
     display: flex;
     flex-direction: column
 }
 #header {
+    background-color: rgb(230, 210, 250);
     display: flex;
     flex-direction: row;
     font-size: 25;
 }
 
 #top {
-    background-color: lightgray;
+    background-color: ghostwhite;
     display: flex;
     flex-direction: row;
     height: 100%;
@@ -54,12 +64,14 @@ body {
     width: 100%;
     position: relative;
     overflow: hidden;
+    background-color: rgb(250,250,220);
 }
 
 #horizontal_drag {
     width: 12px;
     height: 100%;
     display: none;
+    border-left: 1px solid black;
 }
 #horizontal_drag:hover {
     cursor: col-resize;
@@ -83,6 +95,7 @@ body {
     width: 100%;
     position: sticky;
     top: 0px;
+    border-top: 1px solid black;
 }
 #vertical_drag:hover {
     cursor: row-resize;
@@ -92,7 +105,7 @@ body {
     background-color: ghostwhite;
     flex: 1 0 auto;
     position: relative;
-    height: 40%;
+    height: 20%;
     overflow-y: auto;
 }
 #details ul {
@@ -103,4 +116,12 @@ body {
     position: absolute;
     top:0;
     left:0;
+}
+
+#center_button {
+    display: none;
+    position: absolute;
+    background-color: white;
+    font-size: 20;
+    border-radius: 10px;
 }

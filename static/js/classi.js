@@ -1,17 +1,21 @@
-const LINE_SPACING = 30;
+const LINE_SPACING = 50;
 const GAP = 10;
 
 class Nodo {
-    constructor(id) {
+    constructor(id, raw) {
         this.id = id;
-        this.linea = new Line();
+        this.linea = new Line(id);
         this.bounding_box = new Box();
         this.children = [];
         this.final = false;
         this.reference = false;
+        this.choice = raw.choice;
 
-        this.elem = create_card(id); 
+        this.elem = create_card(id, raw); 
         this.rect = box_from_elem(this.elem);
+
+        if (raw.choice)
+            this.legend = create_legend(raw.choice);
     }
 
     compute_box() {
@@ -22,31 +26,38 @@ class Nodo {
         }
         
         let child_width = this.children.reduce((acc,n)=>acc+n.bounding_box.w, 0) + Math.max(0,GAP*(this.children.length-1));
+        
+        let legend_width = 0;
+        if (this.legend)
+            legend_width = this.legend.getBoundingClientRect().width;
 
         this.bounding_box.w = Math.max(child_width, this.rect.w);
         this.bounding_box.h = this.rect.h + LINE_SPACING + this.children.reduce((a,b)=>Math.max(a,b.bounding_box.h),0);
         
         this.rect.x = (this.bounding_box.w-this.rect.w)/2
         
-        let point = 0;
+        let point = (this.bounding_box.w - child_width )/2;
         const children_y = this.rect.h + LINE_SPACING;
         for (let child of this.children) {
             child.moveto(point,children_y);
             point += child.bounding_box.w + GAP;
         }
+
+        this.bounding_box.w = Math.max(this.bounding_box.w, this.rect.x+this.rect.w/2+5+legend_width);
     }
 
     compute_lines() {
         if (this.children.length==0) return;
         if (this.children.length==1) {
-            this.linea.segments.push(new Segment(
-                this.rect.x + this.rect.w/2,
-                this.rect.y + this.rect.h,
-                this.rect.x + this.rect.w/2,
-                this.rect.y + this.rect.h + LINE_SPACING,
-            ));
-            this.linea.bounding_box.x = this.linea.a-5;
-            this.linea.bounding_box.y = this.linea.b;
+            const segmento = new Segment(
+                                this.rect.x + this.rect.w/2,
+                                this.rect.y + this.rect.h,
+                                this.rect.x + this.rect.w/2,
+                                this.rect.y + this.rect.h + LINE_SPACING,
+                            )
+            this.linea.segments.push(segmento);
+            this.linea.bounding_box.x = segmento.a-5;
+            this.linea.bounding_box.y = segmento.b;
             this.linea.bounding_box.w = 10;
             this.linea.bounding_box.h = LINE_SPACING;
         }else{
@@ -111,7 +122,7 @@ class Nodo {
 
 export function build_tree(raw_nodes) {
     const visited = [];
-    const head = new Nodo(0);
+    const head = new Nodo(0, raw_nodes[0]);
 
     const queue = [head];
     while (queue.length>0) {
@@ -126,10 +137,16 @@ export function build_tree(raw_nodes) {
         
         if (raw.children) {
             for (let child_id of raw.children) {
-                const new_son = new Nodo(child_id);
+                const new_son = new Nodo(child_id, raw_nodes[child_id]);
                 if (visited.includes(child_id)) {
                     new_son.reference = true;
                     new_son.elem.classList.add("dummy")
+                    new_son.elem.innerHTML = `
+                        <span>goto ${child_id}</span>
+                    `;
+                    new_son.rect = box_from_elem(new_son.elem);
+                    new_son.legend.remove()
+                    new_son.legend = undefined;
                 }else{
                     queue.unshift(new_son);
                 }
@@ -155,7 +172,8 @@ export function get_nodes(root) {
 }
 
 class Line {
-    constructor() {
+    constructor(id) {
+        this.id=id;
         this.segments = [];
         this.bounding_box = new Box();
     }
@@ -198,14 +216,30 @@ function box_from_elem(elem) {
     );
 }
 
-function create_card(id) {
+function create_card(id, raw) {
     const elem = document.createElement("div")
-    elem.innerHTML = `
+    if (id==0) {
+        elem.innerHTML = `
         <span>${id}</span>
         <hr/>
-        <span>state diff</span>
+        <span>Initial State</span>
         `;
+    }else{
+        elem.innerHTML = `
+        <span>${id}</span>
+        <hr/>
+        ${raw.diff.map(x=>"<span>"+x+"</span>").join("<br/>")}
+        `;
+    }
     elem.classList.add("card");
     document.getElementById("graph_view").appendChild(elem)
     return elem
+}
+
+function create_legend(text) {
+    const elem = document.createElement("span");
+    elem.innerText = text;
+    elem.classList.add("legend");
+    document.getElementById("graph_view").appendChild(elem)
+    return elem;
 }

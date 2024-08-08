@@ -13,7 +13,7 @@ import argparse
 
 import re
 
-from utils.simulator_utils import state_equality2
+from utils.simulator_utils import state_equality2, state_diff
 
 parser = argparse.ArgumentParser(description="PDDL problem simulator")
 parser.add_argument('domain', type=str, help='Path to the PDDL domain')
@@ -45,6 +45,7 @@ with SequentialSimulator(problem) as simulator:
 
             self.parent: Node = parent
             self.children = None
+            self.changes = []
 
             acts = {}
             for act, arg in simulator.get_applicable_actions(state):
@@ -62,6 +63,9 @@ with SequentialSimulator(problem) as simulator:
             self.choices = [x for x in acts.values()]
             self.choice: int = None
 
+            if parent is not None:
+                self.changes = state_diff(problem, nodi.get(parent).state, self.state)
+
     nodi = {0: Node(0, simulator.get_initial_state())}  # id -> node
 
     def get_id():
@@ -74,12 +78,16 @@ with SequentialSimulator(problem) as simulator:
 
     @app.route('/get_graph')
     def get_graph():
+        def formatta(act):
+            return f"{act['name']}{act['args']}"
         response_data = {
             "nodes": [
                 {
                     "id": n.id,
                     "is_final": n.is_final,
-                    "children": n.children
+                    "children": n.children,
+                    "diff": [d for d in n.changes],
+                    "choice": None if n.choice is None else formatta(n.choices[n.choice])
                 } for n in nodi.values()
             ]
         }

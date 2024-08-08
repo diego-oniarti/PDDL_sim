@@ -43,5 +43,26 @@ def state_equality2(problem, state_a, state_b) -> bool:
         for ap in actual_params:
             if state_a.get_value(FluentExp(fluent, ap)) != state_b.get_value(FluentExp(fluent, ap)):
                 return False
-
     return True
+
+
+def state_diff(problem, state_a, state_b):
+    diff = []
+    for fluent in problem.fluents:
+        stack = [[]]
+        actual_params = []
+        while len(stack) > 0:
+            corrente = stack.pop()
+            if len(corrente) == len(fluent.signature):
+                actual_params.append(corrente)
+                continue
+            for o in problem.objects(fluent.signature[len(corrente)].type):
+                new = corrente.copy()
+                new.append(o)
+                stack.append(new)
+
+        for ap in actual_params:
+            new_val = state_b.get_value(FluentExp(fluent, ap))
+            if state_a.get_value(FluentExp(fluent, ap)) != new_val:
+                diff.append(f"{fluent.name}{ap} := {new_val}")
+    return diff
