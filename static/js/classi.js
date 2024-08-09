@@ -18,6 +18,8 @@ class Nodo {
 
         if (raw.choice)
             this.legend = create_legend(raw.choice);
+
+        this.is_loop = false;
     }
 
     compute_box() {
@@ -162,9 +164,77 @@ export function build_tree(raw_nodes) {
         }
     }
 
+    find_loops(head, raw_nodes);
+
     head.compute_box();
     head.compute_lines();
     return head;
+}
+
+function find_loops(root, raw_nodes) {
+    const nodi = get_nodes(root).filter(n=>!n.reference);
+    const raw_map = {};
+    const raw_map_reverted = {};
+    for (let node of raw_nodes) {
+        raw_map[node.id] = node;
+
+        if (!(node.id in raw_map_reverted)) 
+            raw_map_reverted[node.id] = {"id":node.id, "children":[]};
+        if (!node.children) continue;
+
+        for (let child_id of node.children) {
+            if (!(child_id in raw_map_reverted)) 
+                raw_map_reverted[child_id] = {"id":child_id, "children":[]};
+            raw_map_reverted[child_id].children.push(node.id)
+        }
+    }
+
+    const looping_nodes_ids = [];
+
+    for (let raw_node of raw_nodes) {
+        if (check_loop(raw_map, raw_map_reverted, raw_node.id)) {
+            looping_nodes_ids.push(raw_node.id);
+        }
+    }
+
+    for (let nodo of nodi) {
+        if (looping_nodes_ids.includes(nodo.id)){
+            nodo.is_loop = true;
+            document.getElementById(`warning_${nodo.id}`).classList.remove("hidden");
+        }
+    }
+}
+
+function check_loop(raw_map, raw_map_reverse, id) {
+    if (!raw_map[id].choice) return false;
+    const reachable_forward = new Set();
+    const reachable_backward = new Set();
+    const stack = [id];
+    while (stack.length > 0) {
+        const id_corrente = stack.pop();
+        if (reachable_forward.has(id_corrente)) continue;
+
+        reachable_forward.add(id_corrente);
+        const corrente = raw_map[id_corrente];
+        if (!corrente.children) continue;
+        for (let neighbor_id of corrente.children) {
+            stack.push(neighbor_id);
+        }
+    }
+
+    stack.push(id);
+    while (stack.length > 0) {
+        const id_corrente = stack.pop();
+        if (reachable_backward.has(id_corrente)) continue;
+
+        reachable_backward.add(id_corrente);
+        const corrente = raw_map_reverse[id_corrente];
+        for (let neighbor_id of corrente.children) {
+            stack.push(neighbor_id);
+        }
+    }
+
+    return ([...reachable_forward].every(x=>reachable_backward.has(x)))
 }
 
 export function get_nodes(root) {
@@ -233,6 +303,7 @@ function create_card(id, raw) {
         <div>
             <span>${id}</span>
             <div>
+                <button id="warning_${id}" class="warning hidden">loop!</button>
                 <button id="${choice_button_id}" class="choice_button">choice</button>
                 <button id="${info_button_id}" class="info_button">i</button>
             </div>

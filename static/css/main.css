@@ -45,16 +45,33 @@ body {
 .card>div>span {
     margin-right: 20px
 }
+.card>div>div {
+    display: flex;
+    gap: 5px;
+}
 .info_button {
     border: 1px solid blue;
     background-color: lightblue;
     border-radius: 5px;
+    color: blue;
+    font-weight: bold;
 }
 .choice_button {
     border: 1px solid red;
     background-color: orange;
-    border-radius: 5px
+    border-radius: 5px;
 }
+.warning {
+    border: 1px solid red;
+    background-color: yellow;
+    border-radius: 5px;
+    color: red;
+    font-weight: bolder;
+}
+.warning.hidden {
+    display: none;
+}
+
 
 
 #main_container {
