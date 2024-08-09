@@ -295,7 +295,7 @@ function load_description(id) {
             let lines = [];
             for (let name in fluents) {
                 for (let a of fluents[name]) {
-                    if (a.value!="falsez")
+                    if (a.value!="false")
                         lines.push(`${name}[${a.parameters}] := ${a.value}`);
                 }
             }
