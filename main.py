@@ -213,24 +213,54 @@ with SequentialSimulator(problem) as simulator:
 
         nodo.choice = None
 
-        for child_id in nodo.children:
-            child = nodi[child_id]
-            if child.parent == id:
-                print(f"deleting node {child_id}")
-                del nodi[child_id]
+        # for child_id in nodo.children:
+        #     child = nodi[child_id]
+        #     if child.parent == id:
+        #         print(f"deleting node {child_id}")
+        #         del nodi[child_id]
+        # nodo.children = None
+        # saturation = False
+        # while not saturation:
+        #     saturation = True
+        #     tobe_deleted = []
+        #     for id, nodo in nodi.items():
+        #         if (nodo.parent is not None) and (nodo.parent not in nodi):
+        #             saturation = False
+        #             tobe_deleted.append(id)
+        #     for id in tobe_deleted:
+        #         print(f"deleting node {id}")
+        #         del nodi[id]
+
+        tobe_deleted_ids = []
+        stack = [child_id for child_id in filter(lambda cid: nodi[cid].parent == id, nodo.children)]
+        while len(stack) > 0:
+            id_corrente = stack.pop()
+            tobe_deleted_ids.append(id_corrente)
+            corrente = nodi[id_corrente]
+            if corrente.children is not None:
+                for child_id in corrente.children:
+                    child = nodi[child_id]
+                    if child.parent == id_corrente:
+                        stack.append(child_id)
         nodo.children = None
 
-        saturation = False
-        while not saturation:
-            saturation = True
-            tobe_deleted = []
-            for id, nodo in nodi.items():
-                if (nodo.parent is not None) and (nodo.parent not in nodi):
-                    saturation = False
-                    tobe_deleted.append(id)
-            for id in tobe_deleted:
-                print(f"deleting node {id}")
-                del nodi[id]
+        queue = [0]
+        while len(queue) > 0:
+            id_corrente = queue.pop()
+            corrente = nodi[id_corrente]
+            if corrente.children is None:
+                continue
+            for child_id in corrente.children:
+                child = nodi[child_id]
+                if child_id in tobe_deleted_ids:
+                    child.parent = id_corrente
+                    tobe_deleted_ids.remove(child_id)
+                if child.parent == id_corrente:
+                    queue.insert(0, child_id)
+
+        for id in tobe_deleted_ids:
+            print(f"deleting node {id}")
+            del nodi[id]
 
         return ('', 200)
 

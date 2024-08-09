@@ -123,14 +123,18 @@ class Nodo {
 }
 
 export function build_tree(raw_nodes) {
-    raw_nodes.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
+    const raw_nodes_map = {};
+    for (let node of raw_nodes) {
+        raw_nodes_map[node.id] = node;
+    }
+
     const visited = [];
-    const head = new Nodo(0, raw_nodes[0]);
+    const head = new Nodo(0, raw_nodes_map[0]);
 
     const queue = [head];
     while (queue.length>0) {
         const corrente = queue.pop();
-        const raw = raw_nodes[corrente.id];
+        const raw = raw_nodes_map[corrente.id];
         visited.push(corrente.id)
 
         if (raw.is_final) {
@@ -140,7 +144,7 @@ export function build_tree(raw_nodes) {
         
         if (raw.children) {
             for (let child_id of raw.children) {
-                const new_son = new Nodo(child_id, raw_nodes[child_id]);
+                const new_son = new Nodo(child_id, raw_nodes_map[child_id]);
                 if (visited.includes(child_id)) {
                     new_son.reference = true;
                     new_son.elem.classList.add("dummy")
