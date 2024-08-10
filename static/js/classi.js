@@ -130,14 +130,14 @@ export function build_tree(raw_nodes) {
         raw_nodes_map[node.id] = node;
     }
 
-    const visited = [];
+    const visited = new Set();
     const head = new Nodo(0, raw_nodes_map[0]);
 
     const queue = [head];
     while (queue.length>0) {
         const corrente = queue.pop();
         const raw = raw_nodes_map[corrente.id];
-        visited.push(corrente.id)
+        visited.add(corrente.id)
 
         if (raw.is_final) {
             corrente.final=true;
@@ -147,7 +147,7 @@ export function build_tree(raw_nodes) {
         if (raw.children) {
             for (let child_id of raw.children) {
                 const new_son = new Nodo(child_id, raw_nodes_map[child_id]);
-                if (visited.includes(child_id)) {
+                if (visited.has(child_id)) {
                     new_son.reference = true;
                     new_son.elem.classList.add("dummy")
                     new_son.elem.innerHTML = `
@@ -158,6 +158,7 @@ export function build_tree(raw_nodes) {
                     new_son.legend = undefined;
                 }else{
                     queue.unshift(new_son);
+                    visited.add(child_id)
                 }
                 corrente.children.push(new_son);
             }

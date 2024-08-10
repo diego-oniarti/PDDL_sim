@@ -93,6 +93,7 @@ const sketch = p => {
     }
     p.mouseWheel = function(e) {
         if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        if (document.getElementById("choice_modal").style.display == "unset") return;
         if (e.delta>0) {
             posY -= 50;
         }else{
@@ -102,6 +103,7 @@ const sketch = p => {
 
     p.mouseClicked = function() {
         if (p.mouseX<0 || p.mouseX>p.width || p.mouseY<0 || p.mouseY>p.height) return;
+        if (document.getElementById("choice_modal").style.display == "unset") return;
         for (let nodo of nodes) {
             if (nodo.linea?.bounding_box.contains(p.mouseX, p.mouseY)) {
                 undo_choice(nodo.id);

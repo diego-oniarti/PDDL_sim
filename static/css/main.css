@@ -23,7 +23,7 @@ body {
     width: fit-content;
     height: fit-content;
     padding: 10px;
-    border: 1px solid black;
+    border: 2px solid black;
     position: absolute;
     top: 0;
     font-size: small;
