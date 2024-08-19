@@ -116,13 +116,20 @@ const sketch = p => {
         if (!confirm("Do you wish to undo this choice and all the subsequent ones?")) return;
         fetch(`undo_choice?id=${id}`)
             .then(async ()=>{
-                update_graph();
+                await update_graph();
+                // const old_center_x = posX + graph.bounding_box.w/2;
+                // posX = old_center_x - graph.bounding_box.w/2;
             });
     }
 
     center_button.addEventListener("click",()=>{
         posX = 0;
         posY = 0;
+    });
+    document.addEventListener("choice_made",()=>{
+        update_graph();
+        // const old_center_x = posX + graph.bounding_box.w/2;
+        // posX = old_center_x - graph.bounding_box.w/2;
     });
 }
 
@@ -155,7 +162,4 @@ document.getElementById("choice_modal").addEventListener("click",e=>{
 });
 document.getElementById("choice_modal_content").addEventListener("click",e=>{
     e.stopPropagation();
-});
-document.addEventListener("choice_made",()=>{
-    update_graph();
 });

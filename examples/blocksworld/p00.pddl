@@ -8,9 +8,9 @@
   (:goal
   	(and
   		(emptyhand)
-  		;(on a b) (clear a)
+  		(on a b) (clear a)
   		(on b e) (ontable e)
-  		;(ontable c) (ontable d) (clear c) (clear d)
+  		(ontable c) (ontable d) (clear c) (clear d)
   	)
   )
 )

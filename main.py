@@ -7,8 +7,6 @@ from waitress import serve
 from flask import Flask, jsonify, send_from_directory, request
 import webbrowser
 
-from typing import Dict
-
 import argparse
 
 import re
@@ -22,15 +20,6 @@ parser.add_argument('-s', '--no-browser', action='store_true', help='Stops the b
 args = parser.parse_args()
 
 problem: Problem = PDDLReader().parse_problem(args.domain, args.problem)
-
-# Sposta fluents e objects in mappe nome->valore per non dover iterare gli elementi ogni volta
-fluents: Dict[str, Fluent] = {}
-for fluent in problem.fluents:
-    fluents[fluent.name] = fluent
-
-objects: Dict[str, Object] = {}
-for obj in problem.all_objects:
-    objects[obj.name] = obj
 
 diff_regex = re.compile(r'(_differ\d+)+$')
 
@@ -95,7 +84,7 @@ with SequentialSimulator(problem) as simulator:
 
     @app.route('/get_fluents')
     def get_fluents():
-        print("getting fluents")
+        print("GUI: getting fluents")
 
         response_data = {
             "fluents": [
@@ -116,7 +105,7 @@ with SequentialSimulator(problem) as simulator:
 
     @app.route('/get_objects')
     def get_objects():
-        print("getting objects")
+        print("GUI: getting objects")
         oggetti = {}
         for tipo in problem.user_types:
             oggetti[str(tipo)] = []
@@ -130,7 +119,7 @@ with SequentialSimulator(problem) as simulator:
     @app.route('/state_description')
     def state_description():
         id = int(request.args.get("id"))
-        print(f"getting description for state {id}")
+        print(f"GUI: getting description for state {id}")
         stato = nodi.get(id).state
 
         fluent_values = {}
@@ -181,6 +170,7 @@ with SequentialSimulator(problem) as simulator:
     def choose():
         id = int(request.args.get("id"))
         n = int(request.args.get("n"))
+        print(f"GUI: choosing action {n} for state {id}")
 
         node = nodi.get(id)
         node.choice = n
@@ -188,12 +178,12 @@ with SequentialSimulator(problem) as simulator:
 
         choice = node.choices[n]
         for action in choice["acts"]:
-            print("applying action")
+            # print("applying action")
             new_state = simulator.apply_unsafe(node.state, action, choice["args"])
             # controlla se esiste già un nodo equivalente
             for other in nodi.values():
                 if state_equality2(problem, other.state, new_state):
-                    print("old state found")
+                    # print("old state found")
                     node.children.append(other.id)
                     break
             else:
@@ -202,13 +192,14 @@ with SequentialSimulator(problem) as simulator:
                 new_node = Node(new_id, new_state, node.id)
                 nodi[new_id] = new_node
                 node.children.append(new_id)
-                print(f"creato nuovo nodo {new_id}")
+                # print(f"creato nuovo nodo {new_id}")
         node.children = list(dict.fromkeys(node.children))  # rimuovi eventuali ripetizioni
         return ('', 200)
 
     @app.route('/undo_choice')
     def undo_choice():
         id = int(request.args.get("id"))
+        print(f"GUI: undoing choice for state {id}")
         nodo = nodi.get(id)
 
         nodo.choice = None
@@ -254,12 +245,13 @@ with SequentialSimulator(problem) as simulator:
                 child = nodi[child_id]
                 if child_id in tobe_deleted_ids:
                     child.parent = id_corrente
+                    child.changes = state_diff(problem, corrente.state, child.state)
                     tobe_deleted_ids.remove(child_id)
                 if child.parent == id_corrente:
                     queue.insert(0, child_id)
 
         for id in tobe_deleted_ids:
-            print(f"deleting node {id}")
+            # print(f"deleting node {id}")
             del nodi[id]
 
         return ('', 200)
