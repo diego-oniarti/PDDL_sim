@@ -53,7 +53,7 @@ function action_element(action, id, i) {
     select_button.classList.add("select_button");
     container.appendChild(select_button);
     select_button.addEventListener("click",()=>{
-        fetch(`/choose?id=${id}&n=${i}`).then(()=>{
+        fetch(`/choose?id=${id}&n=${i}`, {method: "POST"}).then(()=>{
             document.getElementById("choice_modal").style.display="none";
             document.dispatchEvent(new CustomEvent('choice_made'));
         });

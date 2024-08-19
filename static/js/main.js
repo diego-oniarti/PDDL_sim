@@ -114,7 +114,9 @@ const sketch = p => {
 
     function undo_choice(id) {
         if (!confirm("Do you wish to undo this choice and all the subsequent ones?")) return;
-        fetch(`undo_choice?id=${id}`)
+        fetch(`undo_choice?id=${id}`, {
+            method: "POST"
+        })
             .then(async ()=>{
                 await update_graph();
                 // const old_center_x = posX + graph.bounding_box.w/2;

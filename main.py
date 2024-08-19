@@ -118,7 +118,13 @@ with SequentialSimulator(problem) as simulator:
 
     @app.route('/state_description')
     def state_description():
+        if request.args.get("id") is None:
+            return ('', 400)
+
         id = int(request.args.get("id"))
+        if id not in nodi:
+            return ('', 404)
+
         print(f"GUI: getting description for state {id}")
         stato = nodi.get(id).state
 
@@ -151,6 +157,12 @@ with SequentialSimulator(problem) as simulator:
 
     @app.route('/get_aviable')
     def get_aviable():
+        if request.args.get("id") is None:
+            return ('', 400)
+
+        id = int(request.args.get("id"))
+        if id not in nodi:
+            return ('', 404)
         id = int(request.args.get("id"))
         return jsonify({
             "actions": [
@@ -166,17 +178,29 @@ with SequentialSimulator(problem) as simulator:
             ]
         })
 
-    @app.route('/choose')
+    @app.route('/choose', methods=["POST"])
     def choose():
+        if request.args.get("id") is None:
+            return ('', 400)
+
         id = int(request.args.get("id"))
+        if id not in nodi:
+            return ('', 404)
+
+        if request.args.get("n") is None:
+            return ('', 400)
         n = int(request.args.get("n"))
-        print(f"GUI: choosing action {n} for state {id}")
 
         node = nodi.get(id)
         node.choice = n
         node.children = []
 
+        if n < 0 or n > len(node.choices):
+            return ('', 404)
+
         choice = node.choices[n]
+
+        print(f"GUI: choosing action {n} for state {id}")
         for action in choice["acts"]:
             # print("applying action")
             new_state = simulator.apply_unsafe(node.state, action, choice["args"])
@@ -196,31 +220,17 @@ with SequentialSimulator(problem) as simulator:
         node.children = list(dict.fromkeys(node.children))  # rimuovi eventuali ripetizioni
         return ('', 200)
 
-    @app.route('/undo_choice')
+    @app.route('/undo_choice', methods=['POST'])
     def undo_choice():
+        if request.args.get("id") is None:
+            return ('', 400)
         id = int(request.args.get("id"))
+        if id not in nodi:
+            return ('', 404)
         print(f"GUI: undoing choice for state {id}")
         nodo = nodi.get(id)
 
         nodo.choice = None
-
-        # for child_id in nodo.children:
-        #     child = nodi[child_id]
-        #     if child.parent == id:
-        #         print(f"deleting node {child_id}")
-        #         del nodi[child_id]
-        # nodo.children = None
-        # saturation = False
-        # while not saturation:
-        #     saturation = True
-        #     tobe_deleted = []
-        #     for id, nodo in nodi.items():
-        #         if (nodo.parent is not None) and (nodo.parent not in nodi):
-        #             saturation = False
-        #             tobe_deleted.append(id)
-        #     for id in tobe_deleted:
-        #         print(f"deleting node {id}")
-        #         del nodi[id]
 
         tobe_deleted_ids = []
         stack = [child_id for child_id in filter(lambda cid: nodi[cid].parent == id, nodo.children)]
