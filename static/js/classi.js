@@ -53,45 +53,42 @@ class Nodo {
     compute_lines() {
         if (this.children.length==0) return;
         if (this.children.length==1) {
-            const segmento = new Segment(
-                                this.rect.x + this.rect.w/2,
-                                this.rect.y + this.rect.h,
-                                this.rect.x + this.rect.w/2,
-                                this.rect.y + this.rect.h + LINE_SPACING,
-                            )
-            this.linea.segments.push(segmento);
-            this.linea.bounding_box.x = segmento.a-5;
-            this.linea.bounding_box.y = segmento.b;
-            this.linea.bounding_box.w = 10;
-            this.linea.bounding_box.h = LINE_SPACING;
-        }else{
-            const horizontal_segment = new Segment(
+            var horizontal_segment = new Segment(
                 this.children[0].rect.x + this.children[0].rect.w/2,
                 this.rect.y + this.rect.h + LINE_SPACING/2,
-                this.children[this.children.length-1].rect.x + this.children[this.children.length-1].rect.w/2,
+                this.rect.x + this.rect.w/2,
                 this.rect.y + this.rect.h + LINE_SPACING/2,
             );
-            this.linea.bounding_box.x = horizontal_segment.a;
-            this.linea.bounding_box.y = this.rect.y + this.rect.h;
-            this.linea.bounding_box.w = horizontal_segment.x - horizontal_segment.a;
-            this.linea.bounding_box.h = LINE_SPACING;
-
-            this.linea.segments.push(horizontal_segment);
-            this.linea.segments.push(new Segment(
-                this.rect.x + this.rect.w/2,
-                this.rect.y + this.rect.h,
-                this.rect.x + this.rect.w/2,
+        }else{
+            const rect_center = this.rect.x + this.rect.w/2;
+            var horizontal_segment = new Segment(
+                Math.min(rect_center, this.children[0].rect.x + this.children[0].rect.w/2),
                 this.rect.y + this.rect.h + LINE_SPACING/2,
-            ));
-            for (let child of this.children) {
-                this.linea.segments.push(new Segment(
-                    child.rect.x + child.rect.w/2,
-                    child.rect.y - LINE_SPACING/2,
-                    child.rect.x + child.rect.w/2,
-                    child.rect.y,
-                ));
-            }
+                Math.max(rect_center, this.children[this.children.length-1].rect.x + this.children[this.children.length-1].rect.w/2),
+                this.rect.y + this.rect.h + LINE_SPACING/2,
+            );
         }
+        this.linea.bounding_box.x = horizontal_segment.a -7;
+        this.linea.bounding_box.y = this.rect.y + this.rect.h -7;
+        this.linea.bounding_box.w = horizontal_segment.x - horizontal_segment.a +14;
+        this.linea.bounding_box.h = LINE_SPACING +14;
+
+        this.linea.segments.push(horizontal_segment);
+        this.linea.segments.push(new Segment(
+            this.rect.x + this.rect.w/2,
+            this.rect.y + this.rect.h,
+            this.rect.x + this.rect.w/2,
+            this.rect.y + this.rect.h + LINE_SPACING/2,
+        ));
+        for (let child of this.children) {
+            this.linea.segments.push(new Segment(
+                child.rect.x + child.rect.w/2,
+                child.rect.y - LINE_SPACING/2,
+                child.rect.x + child.rect.w/2,
+                child.rect.y,
+            ));
+        }
+        // }
         for (let child of this.children) {
             child.compute_lines()
         }

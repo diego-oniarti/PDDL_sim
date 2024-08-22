@@ -13,6 +13,7 @@ body {
     position: absolute;
     top:0;
     left:0;
+    white-space: nowrap;
 }
 .legend.hovering {
     color:red;
@@ -28,6 +29,7 @@ body {
     top: 0;
     font-size: small;
     border-radius: 10px;
+    white-space: nowrap;
 }
 .card.finale {
     background-color: rgb(200,250,200);

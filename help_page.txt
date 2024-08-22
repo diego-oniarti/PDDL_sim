@@ -1,0 +1,4 @@
+PPDDLSim: An interactive simulator for non-deterministic PDDL domains.
+
+The simulator's interface is accessible through the browser and the appropriate tab will be opened on launch.
+The simulator supporta a subset of the PPDDL language including the 'oneof' statement but not the 'probabilistic' one.
