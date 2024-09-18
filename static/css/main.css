@@ -63,15 +63,16 @@ body {
     background-color: orange;
     border-radius: 5px;
 }
-.warning {
+.card .warning {
     border: 1px solid red;
     background-color: yellow;
     border-radius: 5px;
     color: red;
     font-weight: bolder;
-}
-.warning.hidden {
     display: none;
+}
+.card.loop .warning {
+    display: unset;
 }
 
 

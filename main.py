@@ -31,6 +31,7 @@ with NonDeterministicSimulator(problem) as simulator:
                 {
                     "id": n.id,
                     "is_final": n.is_final,
+                    "is_loop": n.is_loop,
                     "children": n.children,
                     "diff": [d for d in n.changes],
                     "choice": None if n.choice is None else formatta(n.choices[n.choice])
